@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Web VI Editor</title>
+  <style>
+    #tb {
+      border: 1px solid gray;
+      width: 400px;
+    }
+
+    #tb th {
+      background-color: #2E5E79;
+      color: white;
+    }
+
+    #tb td:first-child {
+      text-align: center;
+      width: 50px;
+      height: 30px;
+    }
+
+    .header {
+      overflow: hidden;
+      margin: 10px;
+    }
+
+    .header div {
+      float: left;
+    }
+
+    #editor {
+      margin-left: 20px;
+      width: 120px;
+      background-color: #2E5E79;
+      /* border: 1px solid gray; */
+      text-align: center;
+      display: block;
+      cursor: pointer;
+      color: white;
+      height: 24px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <div class="header">
+      <div class="toolbar">
+        <input type="button" value="全选" onclick="selectAll();">
+        <input type="button" value="反选" onclick="reverseAll();">
+        <input type="button" value="取消" onclick="cancelAll();">
+      </div>
+      <div id="editor" target="0">进入编辑模式</div>
+    </div>
+    <table id="tb" border="1">
+      <theader>
+        <th style="width:50px;">选择</th>
+        <th style="width:84px;">主机名</th>
+        <th>IP</th>
+        <th style="width:60px;">端口</th>
+        <th style="width:15%;">状态</th>
+      </theader>
+      <tbody id="bd">
+        <tr>
+          <td><input type="checkbox"></td>
+          <td target="hostname">Web01</td>
+          <td target="ip">172.16.1.8</td>
+          <td target="port">80</td>
+          <td target="status">在线</td>
+        </tr>
+        <tr>
+          <td><input type="checkbox"></td>
+          <td target="hostname">Web02</td>
+          <td target="ip">172.16.1.9</td>
+          <td target="port">80</td>
+          <td target="status">在线</td>
+        </tr>
+        <tr>
+          <td><input type="checkbox"></td>
+          <td target="hostname">DB01</td>
+          <td target="ip">172.16.1.51</td>
+          <td target="port">3306</td>
+          <td target="status">在线</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script src="scripts/jquery-1.12.4.js"></script>
+  <script>
+    function selectAll() {
+      $('#tb :checkbox').prop('checked', true).each(function(){
+        checkChange(this);
+      });
+    }
+
+    function cancelAll() {
+      $('#tb :checkbox').prop('checked', false).each(function(){
+        checkChange(this);
+      });
+    }
+
+    function reverseAll() {
+      $('#tb :checkbox').each(function() {
+        this.checked = $(this).prop('checked') ? false : true;
+          checkChange(this);
+      });
+
+    }
+    $('#tb :checkbox').change(function(){
+      checkChange(this);
+    });
+
+    /// checkbox 选中禁止编辑
+    function checkChange(self){
+      var flag = $(self).prop('checked');
+      // console.log(flag)
+      var trs = $(self).parent().siblings().children();
+      if(trs.length>0)
+      {
+        trs.removeAttr('disabled');
+        // 选中
+        if(flag){
+            trs.attr('disabled','disabled')
+        }
+      }
+    }
+
+    $('#editor').click(function() {
+      editorModal(this);
+    });
+
+
+    function editorModal(self) {
+      var flag = $(self).attr('target');
+
+      if (flag == 0) {
+        // 进入编辑模式
+        $(self).attr('target', 1);
+        $(self).text('保存并退出');
+        $(self).css('backgroundColor', 'red');
+        // 循环每一行
+        $('#bd tr').each(function() {
+          // 生成控件
+          $(this).children().each(function() {
+            var v = $(this).text();
+            // console.log(v);
+            var field = $(this).attr('target');
+            if (field == 'status') {
+              $(this).text('');
+              var tag = document.createElement('select');
+              var ops1 = document.createElement('option');
+              ops1.appendChild(document.createTextNode("在线"));
+              ops1.setAttribute("value", "1");
+              tag.setAttribute('name', field);
+              tag.appendChild(ops1);
+
+              var ops2 = document.createElement('option');
+              ops2.appendChild(document.createTextNode("离线"));
+              ops2.setAttribute("value", "0");
+              tag.appendChild(ops2);
+              $(tag).css('height', '30px');
+              $(tag).css('width', '52px');
+              $(this).append(tag);
+
+            } else if (field) {
+              $(this).text('');
+              // console.log(field);
+              var tag = document.createElement("input");
+              // console.log(tag);
+              tag.setAttribute('value', v);
+              tag.setAttribute('type', 'text');
+              tag.setAttribute('name', field);
+              $(tag).css('width', '120px');
+              if (field == 'port') {
+                $(tag).css('width', '56px');
+              }
+              if (field == 'hostname') {
+                $(tag).css('width', '80px');
+              }
+              $(tag).css('padding', '0');
+              $(tag).css('margin', '0');
+              $(tag).css('height', '26px');
+              $(this).append(tag);
+            }
+
+          });
+          $(this).children().find(':checkbox').each(function(){
+            // console.log();
+
+            // var ck = $(this).prop('checked');
+            checkChange(this);
+          });
+
+        })
+
+      } else {
+        // 退出编辑模式
+        $(self).attr('target', 0);
+        $(self).text('进入编辑模式');
+        $(self).css('backgroundColor', '#2E5E79');
+        // 循环每一行
+        $('#bd tr').each(function() {
+
+          $(this).children().each(function() {
+            // console.log($(this).index())
+            var field = $(this).attr('target');
+            // console.log(field);
+
+            if (field == 'status'){
+              var tag = $(this).find('select[name="status"]');
+              // console.log(tag);
+              // 通过索引去查找
+              var ind = tag[0].selectedIndex;
+              // console.log(ind)
+              var text = tag[0].options[ind].text;
+              // console.log(text)
+              tag.remove();
+              $(this).text(text);
+            }
+            else if (field) {
+              var tag = $(this).find(':text');
+              var text = tag.val();
+              tag.remove();
+              $(this).text(text);
+            }
+          })
+        })
+
+      }
+
+    }
+  </script>
+</body>
+
+</html>
